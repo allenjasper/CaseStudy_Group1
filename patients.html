@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <h2>Register Patient</h2>
+        <form id="patientForm">
+            <input type="text" id="name" placeholder="Name" required>
+            <input type="number" id="age" placeholder="Age" required>
+            <select id="gender">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+            <input type="text" id="contact" placeholder="Contact Info">
+            <button type="submit">Register</button>
+        </form>
+        <h2>Patient List</h2>
+        <table id="patientTable"></table>
+
+        <script>
+            document.getElementById("patientForm").onsubmit = function(event) {
+                event.preventDefault();
+                let formData = new FormData();
+                formData.append("register_patient", "1");
+                formData.append("name", document.getElementById("name").value);
+                formData.append("age", document.getElementById("age").value);
+                formData.append("gender", document.getElementById("gender").value);
+                formData.append("contact_info", document.getElementById("contact").value);
+                fetch("api.php", { method: "POST", body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.success || data.error);
+                    loadPatients();
+                });
+            };
+
+            function loadPatients() {
+                fetch("api.php?fetch_patients=1")
+                .then(response => response.json())
+                .then(data => {
+                    let table = document.getElementById("patientTable");
+                    table.innerHTML = "<tr><th>Name</th><th>Age</th><th>Gender</th></tr>" +
+                        data.map(p => `<tr><td>${p.name}</td><td>${p.age}</td><td>${p.gender}</td></tr>`).join("");
+                });
+            }
+            loadPatients();
+        </script>
+    </body>
+</html>

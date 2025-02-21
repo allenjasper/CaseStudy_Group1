@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <h2>Register</h2>
+        <form id="registerForm">
+            <input type="text" id="name" placeholder="Name" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <select id="role">
+                <option value="Doctor">Doctor</option>
+                <option value="Admin">Admin</option>
+            </select>
+            <button type="submit">Register</button>
+        </form>
+        <p id="message"></p>
+
+        <script>
+            document.getElementById("registerForm").onsubmit = function(event) {
+                event.preventDefault();
+                let formData = new FormData();
+                formData.append("register", "1");
+                formData.append("name", document.getElementById("name").value);
+                formData.append("email", document.getElementById("email").value);
+                formData.append("password", document.getElementById("password").value);
+                formData.append("role", document.getElementById("role").value);
+                fetch("api.php", { method: "POST", body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("message").textContent = data.success || data.error;
+                    if (data.success) window.location.href = "login.html";
+                });
+            };
+        </script>
+    </body>
+</html>

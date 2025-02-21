@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+    <h2>Welcome, <span id="username"></span></h2>
+        <h3>Latest Patient Records</h3>
+        <table id="latestPatients">
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Contact Info</th>
+            </tr>
+        </table>
+        <button onclick="window.location.href='patients.html'">Add Patient</button>
+        <button onclick="window.location.href='soap.html'">SOAP Entry</button>
+
+        <script>
+            // Fetch logged-in user's name
+            fetch("api.php?get_user=1")
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Debugging
+                if (data.name) {
+                    document.getElementById("username").textContent = data.name;
+                } else {
+                    window.location.href = "login.html";
+                }
+            })
+            .catch(error => console.error("Error fetching user:", error));
+
+            // Fetch latest 5 patients
+            function loadLatestPatients() {
+                fetch("api.php?fetch_latest_patients=1")
+                .then(response => response.json())
+                .then(data => {
+                    let table = document.getElementById("latestPatients");
+                    table.innerHTML = "<tr><th>Name</th><th>Age</th><th>Gender</th><th>Contact Info</th></tr>" +
+                        data.map(p => `<tr><td>${p.name}</td><td>${p.age}</td><td>${p.gender}</td><td>${p.contact_info}</td></tr>`).join("");
+                })
+                .catch(error => console.error("Error fetching patients:", error));
+            }
+            loadLatestPatients();
+        </script>
+    </body>
+</html>
