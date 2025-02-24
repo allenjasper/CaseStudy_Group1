@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update SOAP Entry</title>
+</head>
+<body>
+    <form id="update_soap">
+        <h2>Update SOAP Entry</h2>
+        <p><strong>Patient:</strong> <span id="patientName"></span></p>
+        <input type="hidden" id="soapId">
+        
+        <label for="subjective">Subjective:</label>
+        <textarea id="subjective" required></textarea>
+        
+        <label for="objective">Objective:</label>
+        <textarea id="objective" required></textarea>
+        
+        <label for="assessment">Assessment:</label>
+        <textarea id="assessment" required></textarea>
+        
+        <label for="plan">Plan:</label>
+        <textarea id="plan" required></textarea>
+        
+        <div class="button-container">
+            <button type="submit" class="update-button">Update Entry</button>
+            <button type="button" class="cancel-button" onclick="window.location.href='soap_view.html'">Cancel</button>
+        </div>
+    </form>
+
+    <script>
+        // Fetch logged-in user's name
+        fetch("api.php?get_user=1")
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); 
+            if (data.name) {
+                document.getElementById("username").textContent = data.name;
+            } else {
+                alert(data.error);
+                window.location.href = "login.html";
+            }
+        })
+        .catch(error => console.error("Error fetching user:", error));
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const soapId = urlParams.get("id");
+            
+            if (!soapId) {
+                alert("Invalid SOAP entry.");
+                window.location.href = "soap_view.html";
+            }
+            
+            fetch(`api.php?get_soap&soap_id=${soapId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        window.location.href = "soap_view.html";
+                    } else {
+                        document.getElementById("soapId").value = soapId;
+                        document.getElementById("patientName").textContent = data.patient_name;
+                        document.getElementById("subjective").value = data.subjective;
+                        document.getElementById("objective").value = data.objective;
+                        document.getElementById("assessment").value = data.assessment;
+                        document.getElementById("plan").value = data.plan;
+                    }
+                })
+                .catch(error => console.error("Error fetching SOAP entry:", error));
+            
+            document.getElementById("update_soap").addEventListener("submit", function (event) {
+                event.preventDefault();
+                
+                const formData = new FormData();
+                formData.append("update_soap", "1");
+                formData.append("soap_id", soapId);
+                formData.append("subjective", document.getElementById("subjective").value);
+                formData.append("objective", document.getElementById("objective").value);
+                formData.append("assessment", document.getElementById("assessment").value);
+                formData.append("plan", document.getElementById("plan").value);
+                
+                fetch("api.php", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("SOAP entry updated successfully.");
+                        window.location.href = "soap_view.html";
+                    } else {
+                        alert("Error updating SOAP entry: " + data.error);
+                    }
+                })
+                .catch(error => console.error("Error updating SOAP entry:", error));
+            });
+        });
+    </script>
+</body>
+</html>

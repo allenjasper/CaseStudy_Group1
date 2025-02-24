@@ -1,13 +1,16 @@
+<!-- dashboard.html -->
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Document</title>
-    </head>
-    <body>
-    <h2>Welcome, <span id="username"></span></h2>
+<html>
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+        <h2>Soap System</h2>
+        
+    
+    <div class="content">
         <h3>Latest Patient Records</h3>
+
         <table id="latestPatients">
             <tr>
                 <th>Name</th>
@@ -16,35 +19,59 @@
                 <th>Contact Info</th>
             </tr>
         </table>
-        <button onclick="window.location.href='patients.html'">Add Patient</button>
-        <button onclick="window.location.href='soap.html'">SOAP Entry</button>
+        <div class="button-container">
+            <button id="add-btn" onclick="window.location.href='patients.html'">New Patient</button>
+            <button id="soap-btn" onclick="window.location.href='soap.html'">New SOAP</button>
+            <button id="soap-tbl" onclick="window.location.href='soap_view.html'">View SOAP</button>
+        </div>
 
-        <script>
-            // Fetch logged-in user's name
-            fetch("api.php?get_user=1")
+    </div>
+
+    <script>
+        // Fetch logged-in user's name
+        fetch("api.php?get_user=1")
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); 
+            if (data.name) {
+                document.getElementById("username").textContent = data.name;
+            } else {
+                alert(data.error);
+                window.location.href = "login.html";
+            }
+        })
+        .catch(error => console.error("Error fetching user:", error));
+
+        // Fetch latest 5 patients
+        function loadLatestPatients() {
+            fetch("api.php?fetch_latest_patients=1")
             .then(response => response.json())
             .then(data => {
-                console.log(data); // Debugging
-                if (data.name) {
-                    document.getElementById("username").textContent = data.name;
-                } else {
+                let table = document.getElementById("latestPatients");
+                table.innerHTML = "<tr><th>Name</th><th>Age</th><th>Gender</th><th>Contact Info</th></tr>" +
+                    data.map(p => `<tr><td>${p.name}</td><td>${p.age}</td><td>${p.gender}</td><td>${p.contact_info}</td></tr>`).join("");
+            })
+            .catch(error => console.error("Error fetching patients:", error));
+        }
+        loadLatestPatients();
+
+        function logout() {
+            fetch("api.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "logout=1"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.success);
                     window.location.href = "login.html";
+                } else {
+                    alert("Logout failed.");
                 }
             })
-            .catch(error => console.error("Error fetching user:", error));
-
-            // Fetch latest 5 patients
-            function loadLatestPatients() {
-                fetch("api.php?fetch_latest_patients=1")
-                .then(response => response.json())
-                .then(data => {
-                    let table = document.getElementById("latestPatients");
-                    table.innerHTML = "<tr><th>Name</th><th>Age</th><th>Gender</th><th>Contact Info</th></tr>" +
-                        data.map(p => `<tr><td>${p.name}</td><td>${p.age}</td><td>${p.gender}</td><td>${p.contact_info}</td></tr>`).join("");
-                })
-                .catch(error => console.error("Error fetching patients:", error));
-            }
-            loadLatestPatients();
-        </script>
-    </body>
+            .catch(error => console.error("Error logging out:", error));
+        }
+    </script>
+</body>
 </html>
