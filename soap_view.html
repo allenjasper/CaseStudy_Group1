@@ -1,0 +1,138 @@
+<!-- view_soap.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View SOAP Records</title>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Soap System</h2>
+        <div class="nav">
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </div>
+
+    <div class="content">
+        <h3>SOAP Records</h3>
+        <input type="text" id="search" placeholder="Search patient..." oninput="filterRecords()">
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Subjective</th>
+                    <th>Objective</th>
+                    <th>Assessment</th>
+                    <th>Plan</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="soapTableBody">
+                <!-- Records will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="button-container">
+        <button onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+        <button onclick="window.location.href='soap.html'">New SOAP</button>
+    </div>
+
+    <script>
+        // Fetch logged-in user's name
+        fetch("api.php?get_user=1")
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); 
+            if (data.name) {
+                document.getElementById("username").textContent = data.name;
+            } else {
+                alert(data.error);
+                window.location.href = "login.html";
+            }
+        })
+        .catch(error => console.error("Error fetching user:", error));
+
+        let soapRecords = [];
+
+        function loadSOAPRecords() {
+            fetch("api.php?fetch_soap=1")
+            .then(response => response.json())
+            .then(data => {
+                soapRecords = data;
+                updateTable(soapRecords);
+            })
+            .catch(error => console.error("Error fetching SOAP records:", error));
+        }
+
+        function updateTable(records) {
+            let tbody = document.getElementById("soapTableBody");
+            tbody.innerHTML = "";
+            records.forEach(record => {
+                let row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${record.patient_name}</td>
+                    <td>${record.subjective}</td>
+                    <td>${record.objective}</td>
+                    <td>${record.assessment}</td>
+                    <td>${record.plan}</td>
+                    <td class="action-buttons">
+                        <button id="updt-btn" onclick="updateRecord(${record.soap_id})">Update</button>
+                        <button id="dlt-btn" onclick="deleteRecord(${record.soap_id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterRecords() {
+            let input = document.getElementById("search").value.toLowerCase();
+            let filtered = soapRecords.filter(r => r.patient_name.toLowerCase().includes(input));
+            updateTable(filtered);
+        }
+
+        function updateRecord(id) {
+            window.location.href = `update_soap.html?id=${id}`;
+        }
+
+        function deleteRecord(id) {
+            if (confirm("Are you sure you want to delete this record?")) {
+                fetch("api.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({ delete_soap: "1", soap_id: id })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.success || data.error);
+                    loadSOAPRecords();
+                })
+                .catch(error => console.error("Error deleting SOAP record:", error));
+            }
+        }
+
+        loadSOAPRecords();
+
+        function logout() {
+            fetch("api.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "logout=1"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.success);
+                    window.location.href = "login.html";
+                } else {
+                    alert("Logout failed.");
+                }
+            })
+            .catch(error => console.error("Error logging out:", error));
+        }
+    </script>
+</body>
+</html>
