@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patients</title>
+    <link rel="stylesheet" href="patient.css">
+</head>
+<body>
+    <form id="patientForm">
+        <h2>Patient Registration</h2>
+
+        <label for="name">Name:</label>
+        <input type="text" id="name" placeholder="Enter name" required>
+
+        <label for="age">Age:</label>
+        <input type="number" id="age" placeholder="Enter age" required>
+
+        <label for="gender">Gender:</label>
+        <select id="gender" required>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label for="contact_info">Contact Info:</label>
+        <input type="text" id="contact_info" placeholder="Ex: 123-456-7890" required>
+
+        <div class="button-group">
+            <button type="submit">Register Patient</button>
+            <button id="bck-btn" type="button" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+        </div>
+    </form>
+
+    <script>
+        // Fetch logged-in user's name
+        fetch("api.php?get_user=1")
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); 
+            if (data.name) {
+                document.getElementById("username").textContent = data.name;
+            } else {
+                alert(data.error);
+                window.location.href = "login.html";
+            }
+        })
+        .catch(error => console.error("Error fetching user:", error));
+        
+        document.getElementById("patientForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const patientData = {
+                register_patient: 1,
+                name: document.getElementById("name").value,
+                age: document.getElementById("age").value,
+                gender: document.getElementById("gender").value,
+                contact_info: document.getElementById("contact_info").value
+            };
+
+            fetch("api.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams(patientData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.success || data.error);
+                document.getElementById("patientForm").reset(); // Clear form after submission
+            })
+            .catch(error => console.error("Error registering patient:", error));
+        });
+    </script>
+</body>
+</html>

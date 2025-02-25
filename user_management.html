@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Management</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        /* Style for disabled users */
+        .disabled-user {
+            background-color: #f2f2f2;
+            color: gray;
+        }
+
+        /* Popup Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            width: 50%;
+            border-radius: 5px;
+        }
+
+        .close {
+            float: right;
+            font-size: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h2>User Management</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+    </table>
+
+    <button onclick="logout()">Logout</button>
+
+    <!-- Popup Modal -->
+    <div id="updateModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Update User</h2>
+            <form id="updateUserForm">
+                <input type="hidden" id="updateUserId">
+                <label>Name:</label>
+                <input type="text" id="updateName" required><br><br>
+                <label>Email:</label>
+                <input type="email" id="updateEmail" required><br><br>
+                <label>Role:</label>
+                <select id="updateRole">
+                    <option value="Doctor">Doctor</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Disabled">Disabled</option>
+                </select><br><br>
+                <button type="submit">Update</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Fetch logged-in user's name
+        fetch("api.php?get_user=1")
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); 
+            if (data.name) {
+                document.getElementById("username").textContent = data.name;
+            } else {
+                alert(data.error);
+                window.location.href = "login.html";
+            }
+        })
+        .catch(error => console.error("Error fetching user:", error));
+        
+        function loadUsers() {
+            fetch("api.php?fetch_users=1")
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data); // Debugging: Check if users are received
+                    if (Array.isArray(data)) {
+                        const tableBody = document.getElementById("userTableBody");
+                        tableBody.innerHTML = ""; // Clear previous content
+
+                        data.forEach(user => {
+                            const isDisabled = user.role.toLowerCase() === "disabled";
+                            const rowClass = isDisabled ? "disabled-user" : "";
+
+                            const row = `<tr class="${rowClass}">
+                                <td>${user.name}</td>
+                                <td>${user.email}</td>
+                                <td>${user.role}</td>
+                                <td>
+                                    <button onclick="openUpdateModal(${user.user_id}, '${user.name}', '${user.email}', '${user.role}')">
+                                        Update
+                                    </button>
+                                </td>
+                            </tr>`;
+                            tableBody.innerHTML += row;
+                        });
+                    } else {
+                        console.error("Invalid response format:", data);
+                    }
+                })
+                .catch(error => console.error("Error loading users:", error));
+        }
+
+        // Open the modal and fill in the user data
+        function openUpdateModal(userId, name, email, role) {
+            document.getElementById("updateUserId").value = userId;
+            document.getElementById("updateName").value = name;
+            document.getElementById("updateEmail").value = email;
+            document.getElementById("updateRole").value = role;
+            document.getElementById("updateModal").style.display = "block";
+        }
+
+        // Close the modal
+        function closeModal() {
+            document.getElementById("updateModal").style.display = "none";
+        }
+
+        // Handle the update form submission
+        document.getElementById("updateUserForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            let userId = document.getElementById("updateUserId").value;
+            let name = document.getElementById("updateName").value;
+            let email = document.getElementById("updateEmail").value;
+            let role = document.getElementById("updateRole").value;
+
+            let formData = new FormData();
+            formData.append("update_user", "1");
+            formData.append("user_id", userId);
+            formData.append("name", name);
+            formData.append("email", email);
+            formData.append("role", role);
+
+            fetch("api.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.success || data.error);
+                closeModal();
+                loadUsers(); // Refresh the table after update
+            })
+            .catch(error => console.error("Error updating user:", error));
+        });
+
+        function logout() {
+            fetch("api.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "logout=1"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.success);
+                    window.location.href = "login.html";
+                } else {
+                    alert("Logout failed.");
+                }
+            })
+            .catch(error => console.error("Error logging out:", error));
+        }
+
+        // Load users when page loads
+        window.onload = loadUsers;
+    </script>
+</body>
+</html>
