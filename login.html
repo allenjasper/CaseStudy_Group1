@@ -2,32 +2,48 @@
 <html>
 <head>
     <title>Login</title>
+    <link rel="stylesheet" href="reg.css">
 </head>
 <body>
-    <h2>Login</h2>
-    <form id="loginForm">
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-    </form>
-    <p id="message"></p>
+    <div class="container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Enter email" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter password" required>
+            <input type="hidden" name="login" value="1"> <!-- Indicate login request -->
+            <button type="submit">Login</button>
+        </form>
+        <p id="message"></p>
+        <p>Don't have an account? <a href="registration.html">Register here!</a></p>
+    </div>
 
     <script>
-        document.getElementById("loginForm").onsubmit = function(event) {
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
             event.preventDefault();
-            let email = document.getElementById("email").value;
-            let password = document.getElementById("password").value;
-            let formData = new FormData();
-            formData.append("login", "1");
-            formData.append("email", email);
-            formData.append("password", password);
-            fetch("api.php", { method: "POST", body: formData })
+
+            const formData = new FormData(this);
+
+            fetch("api.php", {
+                method: "POST",
+                body: formData
+            })
             .then(response => response.json())
             .then(data => {
-                document.getElementById("message").textContent = data.success || data.error;
-                if (data.success) window.location.href = "dashboard.html";
-            });
-        };
+                if (data.success) {
+                    // Redirect based on user role
+                    if (data.role === "Admin") {
+                        window.location.href = "user_management.html";
+                    } else {
+                        window.location.href = "dashboard.html";
+                    }
+                } else {
+                    document.getElementById("message").textContent = data.error; // Show error message
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
     </script>
 </body>
 </html>

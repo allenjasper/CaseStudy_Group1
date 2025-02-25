@@ -3,16 +3,17 @@
 <html>
 <head>
     <title>View SOAP Records</title>
+    <link rel="stylesheet" href="soap-view.css">
 </head>
 <body>
 
     <div class="header">
         <h2>Soap System</h2>
         <div class="nav">
-            <a href="#">About</a>
-            <a href="#">Contact</a>
-            <a href="#" onclick="logout()">Logout</a>
-        </div>
+            <span id="username"></span>
+            <a href="#" class="logout" onclick="logout()">Logout</a>
+        </div>    
+        
     </div>
 
     <div class="content">
@@ -37,8 +38,8 @@
     </div>
 
     <div class="button-container">
-        <button onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
-        <button onclick="window.location.href='soap.html'">New SOAP</button>
+        <button id="bck-btn" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+        <button id="add-btn" onclick="window.location.href='soap.html'">New SOAP</button>
     </div>
 
     <script>
